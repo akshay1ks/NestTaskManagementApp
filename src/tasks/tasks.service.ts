@@ -3,7 +3,6 @@ import { TaskStatus } from './task-status.enum';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TaskRepository } from './task.repository';
 import { Task } from './task.entity';
 import { Repository } from 'typeorm';
 
@@ -30,6 +29,26 @@ export class TasksService {
       status: TaskStatus.OPEN,
     });
     await this.taskRepository.save(task);
+    return task;
+  }
+
+  async deleteTaskById(id: string): Promise<void> {
+    const result = await this.taskRepository.delete(id);
+    console.log(result);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Task with ID "${id}" not found`);
+    }
+  }
+
+  async updateTaskStatus(
+    id: string,
+    status: TaskStatus,
+  ): Promise<Task | undefined> {
+    const task = await this.getTaskById(id);
+
+    task.status = status;
+    await this.taskRepository.save(task);
+
     return task;
   }
   //   private tasks: Task[] = [];
