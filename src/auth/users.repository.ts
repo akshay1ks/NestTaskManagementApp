@@ -1,11 +1,11 @@
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-
 import { DataSource, Repository } from 'typeorm';
 import { User } from './user.entity';
 import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
 export const UsersRepository = (dataSource: DataSource) =>
   dataSource.getRepository(User).extend({
@@ -14,7 +14,12 @@ export const UsersRepository = (dataSource: DataSource) =>
       authCredentials: AuthCredentialsDto,
     ): Promise<void> {
       const { username, password } = authCredentials;
-      const user = this.create({ username, password });
+
+      //hash the password
+      const salt = await bcrypt.genSalt();
+      const hashedPassword: string = await bcrypt.hash(password, salt);
+
+      const user = this.create({ username, password: hashedPassword });
       try {
         await this.save(user);
       } catch (error) {
